@@ -10,6 +10,7 @@ import org.postgresql.util.GT;
 import java.io.IOException;
 
 class UTF8Encoding extends Encoding {
+  private static final int MAXIMUM_UTF8_ARRAY_SIZE = 0x100000;
   private static final int MIN_2_BYTES = 0x80;
   private static final int MIN_3_BYTES = 0x800;
   private static final int MIN_4_BYTES = 0x10000;
@@ -83,7 +84,12 @@ class UTF8Encoding extends Encoding {
   public synchronized String decode(byte[] data, int offset, int length) throws IOException {
     char[] cdata = decoderArray;
     if (cdata.length < length) {
-      cdata = decoderArray = new char[length];
+      if (length > MAXIMUM_UTF8_ARRAY_SIZE) {
+        // always allocate a new buffer
+        cdata = new char[length];
+      } else {
+        cdata = decoderArray = new char[length];
+      }
     }
 
     int in = offset;
